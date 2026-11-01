@@ -352,3 +352,317 @@ input,select {
  <button onclick="go('tasbeeh')"><span>📿</span>السبحة</button>
  <button onclick="go('quiz')"><span>🧠</span>اختبار</button>
 </nav>
+<script>
+// أسماء السور الـ114
+const surahs = [
+"الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس",
+"هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه",
+"الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم",
+"لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر",
+"فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق",
+"الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة",
+"الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج",
+"نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس",
+"التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد",
+"الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات",
+"القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر",
+"المسد","الإخلاص","الفلق","الناس"
+];
+
+const $ = id => document.getElementById(id);
+
+// التنقل بين الأقسام
+function go(id) {
+ document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));
+ $(id).classList.add("active");
+ document.getElementById("drawer").classList.remove("open");
+ window.scrollTo(0,0);
+}
+
+function toggleMenu() {
+ document.getElementById("drawer").classList.toggle("open");
+}
+
+// الاسم الشخصي
+function saveName() {
+ const name=$("userName").value.trim();
+ localStorage.setItem("ya_name",name);
+ updateWelcome();
+ alert("تم حفظ الاسم بنجاح ❤️");
+}
+
+function updateWelcome() {
+ const name=localStorage.getItem("ya_name")||"";
+ $("welcome").textContent=name
+ ? "أهلاً يا "+name+"، نورت Yassen_apk"
+ : "أهلاً بك في Yassen_apk";
+ $("userName").value=name;
+}
+
+// دعوة الأصدقاء
+function shareApp() {
+ const url="https://github.com/eman09873673737-create/yassen_apk/releases";
+ const message="حمّل تطبيق Yassen_apk للقرآن الكريم والأذكار والسبحة والتفسير الميسّر ❤️\nرابط التحميل: "+url;
+
+ if(navigator.share) {
+  navigator.share({
+   title:"Yassen_apk",
+   text:message,
+   url:url
+  }).catch(()=>{});
+ } else {
+  prompt("انسخ رسالة الدعوة وأرسلها لأصدقائك:",message);
+ }
+}
+
+// الورد اليومي
+let goal=Number(localStorage.getItem("ya_goal")||5);
+let read=Number(localStorage.getItem("ya_read")||0);
+
+function renderDaily() {
+ $("dailyGoal").value=goal;
+ $("goalCount").textContent=goal;
+ $("readCount").textContent=read;
+ $("dailyBar").style.width=Math.min(100,read/goal*100)+"%";
+}
+
+function saveGoal() {
+ goal=Math.max(1,Number($("dailyGoal").value)||5);
+ localStorage.setItem("ya_goal",goal);
+ renderDaily();
+}
+
+function addPage() {
+ read++;
+ localStorage.setItem("ya_read",read);
+ renderDaily();
+}
+
+// تجهيز قوائم السور
+function fillSurahs() {
+ surahs.forEach((name,index)=>{
+  const option=document.createElement("option");
+  option.value=index+1;
+  option.textContent=(index+1)+" - "+name;
+  $("surahSelect").appendChild(option);
+  $("tafsirSelect").appendChild(option.cloneNode(true));
+ });
+}
+
+// تحميل القرآن الكريم
+async function loadSurah() {
+ const id=$("surahSelect").value;
+ $("quranText").textContent="جارٍ تحميل السورة...";
+
+ try {
+  const response=await fetch(
+   "https://api.alquran.cloud/v1/surah/"+id
+  );
+  const result=await response.json();
+
+  if(result.code!==200) throw Error();
+
+  $("quranText").innerHTML=result.data.ayahs.map(ayah=>
+   '<div class="verse">'+ayah.text+
+   ' <span style="color:#dfbd72">۞ '+ayah.numberInSurah+
+   '</span></div>'
+  ).join("");
+
+ } catch(error) {
+  $("quranText").textContent=
+   "تعذر تحميل القرآن. تحقق من الإنترنت وحاول مرة أخرى.";
+ }
+}
+
+// تشغيل تلاوة السورة
+function playSurah() {
+ const id=String($("surahSelect").value).padStart(3,"0");
+ const reciter=$("reciter").value;
+
+ $("audio").src=
+ "https://server8.mp3quran.net/"+reciter+"/"+id+".mp3";
+
+ $("audio").play().catch(()=>{
+  alert("تعذر تشغيل التسجيل. جرّب قارئًا آخر.");
+ });
+}
+
+// التفسير الميسر
+async function loadTafsir() {
+ const id=$("tafsirSelect").value;
+ $("tafsirText").textContent="جارٍ تحميل التفسير الميسر...";
+
+ try {
+  const response=await fetch(
+   "https://api.alquran.cloud/v1/surah/"+id+"/ar.muyassar"
+  );
+
+  const result=await response.json();
+
+  if(result.code!==200) throw Error();
+
+  $("tafsirText").innerHTML=result.data.ayahs.map(ayah=>
+   '<div class="card">'+
+   '<div class="muted">الآية '+ayah.numberInSurah+'</div>'+
+   '<div class="verse">'+ayah.text+'</div>'+
+   '<div class="translation">'+
+   '<b style="color:#f5dfa8">التفسير الميسر:</b><br>'+
+   ayah.text+
+   '</div></div>'
+  ).join("");
+
+ } catch(error) {
+  $("tafsirText").textContent=
+   "تعذر تحميل التفسير من الخدمة الحالية. لم نعرض تفسيرًا غير موثوق.";
+ }
+}
+
+// الأذكار
+const adhkar={
+ morning:[
+  ["أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.",1],
+  ["اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور.",1],
+  ["رضيت بالله ربًا، وبالإسلام دينًا، وبمحمد ﷺ نبيًا.",3],
+  ["سبحان الله وبحمده.",100]
+ ],
+ evening:[
+  ["أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.",1],
+  ["اللهم بك أمسينا وبك أصبحنا وبك نحيا وبك نموت وإليك المصير.",1],
+  ["رضيت بالله ربًا، وبالإسلام دينًا، وبمحمد ﷺ نبيًا.",3],
+  ["سبحان الله وبحمده.",100]
+ ],
+ sleep:[
+  ["باسمك اللهم أموت وأحيا.",1],
+  ["اللهم قني عذابك يوم تبعث عبادك.",3],
+  ["سبحان الله.",33],
+  ["الحمد لله.",33],
+  ["الله أكبر.",34]
+ ],
+ wake:[
+  ["الحمد لله الذي أحيانا بعدما أماتنا وإليه النشور.",1]
+ ]
+};
+
+let dhIndex=0;
+
+function showDhikr() {
+ dhIndex=0;
+ renderDhikr();
+}
+
+function renderDhikr() {
+ const list=adhkar[$("dhikrType").value];
+ const item=list[dhIndex];
+
+ $("dhikrCard").innerHTML=
+ '<div class="dhikr">'+item[0]+'</div>'+
+ '<p style="text-align:center">العدد الوارد: <b>'+item[1]+
+ '</b> — الذكر '+(dhIndex+1)+' من '+list.length+'</p>';
+}
+
+function nextDhikr() {
+ const list=adhkar[$("dhikrType").value];
+ dhIndex=(dhIndex+1)%list.length;
+ renderDhikr();
+}
+
+function prevDhikr() {
+ const list=adhkar[$("dhikrType").value];
+ dhIndex=(dhIndex-1+list.length)%list.length;
+ renderDhikr();
+}
+
+// السبحة الإلكترونية
+let tas=Number(localStorage.getItem("ya_tas")||0);
+let tgoal=10;
+
+function setRepeat() {
+ tgoal=Number($("repeatGoal").value);
+ tas=0;
+ renderTas();
+}
+
+function renderTas() {
+ $("tasCount").textContent=tas;
+ $("tasGoal").textContent=tgoal;
+ $("tasBar").style.width=(tas/tgoal*100)+"%";
+
+ $("tasMessage").textContent=
+ tas>=tgoal
+ ? "أحسنت! اكتمل العدد المحدد 🌿"
+ : "";
+
+ localStorage.setItem("ya_tas",tas);
+}
+
+function countTas() {
+ if(tas<tgoal) tas++;
+ renderTas();
+
+ if(tas===tgoal && navigator.vibrate) {
+  navigator.vibrate(150);
+ }
+}
+
+function resetTas() {
+ tas=0;
+ renderTas();
+}
+
+function changeTasText() {
+ $("tasText").textContent=$("tasTextSelect").value;
+}
+
+// الاختبار
+const questions=[
+ ["كم عدد سور القرآن الكريم؟",["110","114","120"],1],
+ ["ما أطول سورة في القرآن؟",["البقرة","آل عمران","النساء"],0],
+ ["ما أقصر سورة في القرآن؟",["الفلق","الكوثر","العصر"],1],
+ ["في أي سورة توجد آية الكرسي؟",["البقرة","يس","الرحمن"],0],
+ ["ما أول سورة في المصحف؟",["الفاتحة","البقرة","العلق"],0]
+];
+
+let qi=0;
+let score=0;
+
+function startQuiz() {
+ qi=0;
+ score=0;
+ renderQuestion();
+}
+
+function renderQuestion() {
+ if(qi>=questions.length) {
+  $("quizBox").innerHTML=
+   '<h2>انتهى الاختبار</h2>'+
+   '<p>نتيجتك: '+score+' من '+questions.length+'</p>'+
+   '<button class="btn primary full" onclick="startQuiz()">إعادة الاختبار</button>';
+  return;
+ }
+
+ const q=questions[qi];
+
+ $("quizBox").innerHTML=
+  '<p>السؤال '+(qi+1)+' من '+questions.length+'</p>'+
+  '<h2>'+q[0]+'</h2>'+
+  q[1].map((answer,index)=>
+   '<button class="menuitem" onclick="answerQuiz('+index+')">'+
+   answer+'</button>'
+  ).join("");
+}
+
+function answerQuiz(answer) {
+ if(answer===questions[qi][2]) score++;
+ qi++;
+ renderQuestion();
+}
+
+// تشغيل الإعدادات عند فتح التطبيق
+updateWelcome();
+renderDaily();
+fillSurahs();
+showDhikr();
+renderTas();
+</script>
+</body>
+</html>
