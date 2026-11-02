@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#06452e">
+<title>Yassen_apk - القرآن الكريم</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#073b2b;color:#173d2b;font-family:Tahoma,Arial,sans-serif}
+header{background:#052c20;color:#f6d77b;text-align:center;padding:20px;border-bottom:3px solid #d7b65c}
+header h1{margin:0;font-size:28px}
+header p{margin:8px 0 0;color:#fff}
+nav{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:#06452e;justify-content:center}
+button{border:1px solid #d7b65c;border-radius:10px;padding:11px;background:#087443;color:white;font-size:15px;cursor:pointer}
+button:hover{background:#139354}
+main{max-width:950px;margin:auto;padding:12px}
+section{display:none}
+section.active{display:block}
+.card{background:#fff7e5;border:2px solid #d7b65c;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 4px 12px #001b1266}
+h2,h3{color:#075337}
+label{display:block;margin:10px 0}
+select,input{max-width:100%;padding:10px;border-radius:8px;border:1px solid #b9a66a;background:#fff}
+input{width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.verse{font-size:23px;line-height:2.1;border-bottom:1px solid #dfd0a5;padding:12px 0}
+.big{font-size:40px;font-weight:bold;text-align:center;color:#087443;margin:15px}
+.center{text-align:center}
+.note{font-size:13px;line-height:1.8;color:#715c32}
+#dhikrText{font-size:24px;line-height:2;text-align:center;padding:20px}
+#quizAnswers button{display:block;width:100%;margin:8px 0;text-align:right}
+.progress{height:12px;background:#ddd;border-radius:10px;overflow:hidden}
+#bar{height:100%;width:0;background:#169653}
+audio{width:100%;margin-top:12px}
+footer{text-align:center;padding:15px;color:#eee;font-size:12px}
+</style>
+</head>
+
+<body>
+<header>
+<h1>🌙 Yassen_apk</h1>
+<p>القرآن الكريم · نور لقلبك وراحة لروحك</p>
+</header>
+
+<nav>
+<button onclick="show('home')">الرئيسية</button>
+<button onclick="show('quran')">📖 القرآن</button>
+<button onclick="show('adhkar')">🤲 الأذكار</button>
+<button onclick="show('tasbeeh')">📿 السبحة</button>
+<button onclick="show('tafsir')">📚 التفسير</button>
+<button onclick="show('quiz')">📝 الاختبار</button>
+<button onclick="show('settings')">⚙️ الإعدادات</button>
+</nav>
+
+<main>
+
+<section id="home" class="active">
+<div class="card center">
+<h2 id="welcome">أهلًا بك في Yassen_apk 💚</h2>
+<h3>وردك اليومي من القرآن</h3>
+<div class="big"><span id="read">0</span> / <span id="goalLabel">5</span></div>
+<p>عدد الصفحات المقروءة اليوم</p>
+<div class="progress"><div id="bar"></div></div>
+<label>هدفك اليومي بالصفحات
+<input id="goal" type="number" min="1" value="5" onchange="saveGoal()">
+</label>
+<button onclick="addPage()">أنهيت قراءة صفحة ✓</button>
+<button onclick="show('quran')">ابدأ القراءة</button>
+</div>
+
+<div class="card">
+<h3>🎧 استمع للقرآن الكريم</h3>
+<label>اختر القارئ
+<select id="reciter">
+<option value="Husary_128kbps">محمود خليل الحصري</option>
+<option value="Minshawy_Murattal_128kbps">محمد صديق المنشاوي</option>
+<option value="tablawi">محمود الطبلاوي</option>
+</select>
+</label>
+<label>اختر السورة
+<select id="audioSurah"></select>
+</label>
+<button onclick="playAudio()">▶ تشغيل التلاوة</button>
+<audio id="audio" controls></audio>
+<p class="note">الاستماع يحتاج إلى الإنترنت. قد تحتاج بعض روابط القراء إلى التحديث.</p>
+</div>
+
+<div class="card">
+<h3>🤲 أذكارك اليومية</h3>
+<p>أذكار الصباح والمساء والنوم والاستيقاظ.</p>
+<button onclick="show('adhkar')">عرض الأذكار</button>
+</div>
+
+<div class="card">
+<h3>📿 سبحتك الإلكترونية</h3>
+<p>سبّح الله واحفظ عدد تسبيحاتك.</p>
+<button onclick="show('tasbeeh')">افتح السبحة</button>
+</div>
+</section>
+
+<section id="quran">
+<div class="card">
+<h2>📖 القرآن الكريم كاملًا</h2>
+<label>اختر السورة
+<select id="surah" onchange="loadSurah()"></select>
+</label>
+<button onclick="addPage()">تسجيل صفحة في الورد ✓</button>
+<div id="quranText">اختر سورة لتحميل القرآن الكريم.</div>
+</div>
+</section>
+
+<section id="adhkar">
+<div class="card">
+<h2>🤲 الأذكار</h2>
+<label>اختر القسم
+<select id="dhikrType" onchange="resetDhikr()">
+<option value="morning">أذكار الصباح</option>
+<option value="evening">أذكار المساء</option>
+<option value="sleep">أذكار النوم</option>
+<option value="wake">أذكار الاستيقاظ</option>
+</select>
+</label>
+<div id="dhikrText"></div>
+<p class="center">الذكر رقم <span id="dhikrNum">1</span></p>
+<div class="row">
+<button onclick="prevDhikr()">السابق</button>
+<button onclick="nextDhikr()">التالي</button>
+</div>
+<p class="note">هذه مجموعة مختصرة وليست جميع الأذكار. يُرجى مراجعة مصدر موثوق لاستكمالها والتحقق من نصوصها.</p>
+</div>
+</section>
+
+<section id="tasbeeh">
+<div class="card center">
+<h2>📿 السبحة الإلكترونية</h2>
+<label>اختر الذكر
+<select id="tasWord">
+<option>سبحان الله</option>
+<option>الحمد لله</option>
+<option>الله أكبر</option>
+<option>لا إله إلا الله</option>
+<option>أستغفر الله</option>
+<option>سبحان الله وبحمده</option>
+</select>
+</label>
+<label>اختر العدد
+<select id="tasGoal" onchange="changeTasGoal()">
+<option>3</option>
+<option>5</option>
+<option selected>7</option>
+<option>10</option>
+<option>33</option>
+<option>100</option>
+</select>
+</label>
+<div id="tasCount" class="big">0</div>
+<p>من <span id="tasGoalLabel">7</span></p>
+<button onclick="countTas()">سبّح 📿</button>
+<button onclick="resetTas()">إعادة العد</button>
+<p id="tasMessage"></p>
+</div>
+</section>
+
+<section id="tafsir">
+<div class="card">
+<h2>📚 التفسير الميسر</h2>
+<label>اختر السورة
+<select id="tafsirSurah"></select>
+</label>
+<button onclick="loadTafsir()">عرض التفسير</button>
+<div id="tafsirText"></div>
+<p class="note">يعتمد هذا القسم على خدمة خارجية. إذا لم تعمل الخدمة فلن يظهر التفسير.</p>
+</div>
+</section>
+
+<section id="quiz">
+<div class="card">
+<h2>📝 اختبر معلوماتك الإسلامية</h2>
+<div id="quizBox">
+<p>هل أنت مستعد للاختبار؟</p>
+<button onclick="startQuiz()">ابدأ الاختبار</button>
+</div>
+</div>
+</section>
+
+<section id="settings">
+<div class="card">
+<h2>⚙️ الإعدادات</h2>
+<label>اسمك
+<input id="userName" placeholder="اكتب اسمك هنا">
+</label>
+<button onclick="saveName()">حفظ الاسم</button>
+<button onclick="shareApp()">دعوة صديق</button>
+<p class="note">يُحفظ اسمك وتقدمك على هذا الجهاز في المتصفح. رابط الدعوة لن يكون رابط APK صالحًا حتى يتم بناء التطبيق ونشره.</p>
+</div>
+</section>
+
+</main>
+
+<footer>Yassen_apk · نسأل الله أن ينفعنا بالقرآن الكريم</footer>
+
+<script>
+const surahs=[
+"الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس",
+"هود","يوسف","الرعد","إبراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه",
+"الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم",
+"لقمان","السجدة","الأحزاب","سبأ","فاطر","يس","الصافات","ص","الزمر","غافر",
+"فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق",
+"الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة",
+"الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج",
+"نوح","الجن","المزمل","المدثر","القيامة","الإنسان","المرسلات","النبأ","النازعات","عبس",
+"التكوير","الانفطار","المطففين","الانشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد",
+"الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات",
+"القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر",
+"المسد","الإخلاص","الفلق","الناس"
+];
+
+const $=id=>document.getElementById(id);
+
+function show(id){
+document.querySelectorAll("main section").forEach(s=>s.classList.remove("active"));
+$(id).classList.add("active");
+window.scrollTo(0,0);
+}
+
+function fillSelect(id){
+surahs.forEach((name,i)=>{
+$(id).add(new Option((i+1)+" - "+name,i+1));
+});
+}
+["surah","audioSurah","tafsirSurah"].forEach(fillSelect);
+
+async function loadSurah(){
+$("quranText").textContent="جارٍ تحميل السورة...";
+try{
+const r=await fetch("https://api.alquran.cloud/v1/surah/"+$("surah").value);
+const j=await r.json();
+if(j.code!==200)throw Error();
+$("quranText").innerHTML=j.data.ayahs.map(a=>
+'<div class="verse">'+a.text+' <small>﴿'+a.numberInSurah+'﴾</small></div>'
+).join("");
+}catch(e){
+$("quranText").textContent="تعذر التحميل. تحقق من الإنترنت وحاول مرة أخرى.";
+}
+}
+
+function playAudio(){
+const n=String($("audioSurah").value).padStart(3,"0");
+const r=$("reciter").value;
+$("audio").src="https://server8.mp3quran.net/"+r+"/"+n+".mp3";
+$("audio").play().catch(()=>alert("تعذر تشغيل التلاوة. قد يحتاج رابط القارئ إلى التحديث."));
+}
+
+const adhkar={
+morning:[
+["أصبحنا وأصبح الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.",1],
+["اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور.",1],
+["رضيت بالله ربًا، وبالإسلام دينًا، وبمحمد ﷺ نبيًا.",3],
+["سبحان الله وبحمده.",100]
+],
+evening:[
+["أمسينا وأمسى الملك لله، والحمد لله، لا إله إلا الله وحده لا شريك له، له الملك وله الحمد وهو على كل شيء قدير.",1],
+["اللهم بك أمسينا وبك أصبحنا وبك نحيا وبك نموت وإليك المصير.",1],
+["رضيت بالله ربًا، وبالإسلام دينًا، وبمحمد ﷺ نبيًا.",3],
+["سبحان الله وبحمده.",100]
+],
+sleep:[
+["باسمك اللهم أموت وأحيا.",1],
+["سبحان الله.",33],
+["الحمد لله.",33],
+["الله أكبر.",34]
+],
+wake:[
+["الحمد لله الذي أحيانا بعدما أماتنا وإليه النشور.",1]
+]
+};
+
+let dhIndex=0;
+
+function renderDhikr(){
+const list=adhkar[$("dhikrType").value];
+$("dhikrText").textContent=list[dhIndex][0];
+$("dhikrNum").textContent=(dhIndex+1)+" من "+list.length+" · العدد "+list[dhIndex][1];
+}
+function resetDhikr(){dhIndex=0;renderDhikr()}
+function nextDhikr(){dhIndex=(dhIndex+1)%adhkar[$("dhikrType").value].length;renderDhikr()}
+function prevDhikr(){dhIndex=(dhIndex-1+adhkar[$("dhikrType").value].length)%adhkar[$("dhikrType").value].length;renderDhikr()}
+
+let tas=Number(localStorage.getItem("ya_tas")||0);
+let tasGoal=7;
+
+function changeTasGoal(){tasGoal=Number($("tasGoal").value);tas=0;renderTas()}
+function countTas(){if(tas<tasGoal)tas++;renderTas();localStorage.setItem("ya_tas",tas)}
+function resetTas(){tas=0;renderTas();localStorage.setItem("ya_tas",tas)}
+function renderTas(){
+$("tasCount").textContent=tas;
+$("tasGoalLabel").textContent=tasGoal;
+$("tasMessage").textContent=tas>=tasGoal?"أحسنت! أكملت العدد المحدد 🌿":"";
+}
+
+async function loadTafsir(){
+$("tafsirText").textContent="جارٍ التحميل...";
+try{
+const id=$("tafsirSurah").value;
+const r=await fetch("https://api.alquran.cloud/v1/surah/"+id+"/ar.muyassar");
+const j=await r.json();
+if(j.code!==200)throw Error();
+$("tafsirText").innerHTML=j.data.ayahs.map(a=>
+'<div class="verse"><b>الآية '+a.numberInSurah+'</b><br>'+a.text+'</div>'
+).join("");
+$("tafsirText").insertAdjacentHTML("afterbegin",
+'<p class="note">تحقق من مصدر النص؛ هذه الخدمة قد لا تعرض التفسير في جميع الحالات.</p>');
+}catch(e){
+$("tafsirText").textContent="تعذر تحميل التفسير من الخدمة الحالية.";
+}
+}
+
+const questions=[
+["كم عدد سور القرآن الكريم؟",["110","114","120"],1],
+["ما أطول سورة في القرآن؟",["البقرة","آل عمران","النساء"],0],
+["ما أقصر سورة في القرآن؟",["الفلق","الكوثر","العصر"],1],
+["في أي سورة توجد آية الكرسي؟",["البقرة","يس","الرحمن"],0],
+["ما أول سورة في المصحف؟",["الفاتحة","البقرة","العلق"],0]
+];
+let qi=0,score=0;
+
+function startQuiz(){qi=0;score=0;renderQuestion()}
+function renderQuestion(){
+if(qi>=questions.length){
+$("quizBox").innerHTML="<h3>انتهى الاختبار</h3><p>نتيجتك: "+score+" من "+questions.length+"</p><button onclick='startQuiz()'>إعادة الاختبار</button>";
+return;
+}
+const q=questions[qi];
+$("quizBox").innerHTML="<p>السؤال "+(qi+1)+" من "+questions.length+"</p><h3>"+q[0]+"</h3><div id='quizAnswers'></div>";
+q[1].forEach((a,i)=>{
+const b=document.createElement("button");
+b.textContent=a;
+b.onclick=()=>{if(i===q[2])score++;qi++;renderQuestion()};
+$("quizAnswers").appendChild(b);
+});
+}
+
+let goal=Number(localStorage.getItem("ya_goal")||5);
+let read=Number(localStorage.getItem("ya_read")||0);
+
+function renderGoal(){
+$("goal").value=goal;
+$("goalLabel").textContent=goal;
+$("read").textContent=read;
+$("bar").style.width=Math.min(100,read/goal*100)+"%";
+}
+function saveGoal(){
+goal=Math.max(1,Number($("goal").value)||5);
+localStorage.setItem("ya_goal",goal);
+renderGoal();
+}
+function addPage(){
+read++;
+localStorage.setItem("ya_read",read);
+renderGoal();
+}
+function saveName(){
+localStorage.setItem("ya_name",$("userName").value.trim());
+updateName();
+alert("تم حفظ الاسم");
+}
+function updateName(){
+const n=localStorage.getItem("ya_name")||"";
+$("userName").value=n;
+$("welcome").textContent=n?"أهلًا يا "+n+"، نورت التطبيق 💚":"أهلًا بك في Yassen_apk 💚";
+}
+function shareApp(){
+const url="https://github.com/eman09873673737-create/yassen_apk/releases";
+const text="جرّب Yassen_apk للقرآن والأذكار والسبحة: "+url;
+if(navigator.share){
+navigator.share({title:"Yassen_apk",text:text,url:url}).catch(()=>{});
+}else{
+prompt("انسخ رسالة الدعوة وأرسلها لأصدقائك:",text);
+}
+}
+
+renderGoal();
+updateName();
+renderDhikr();
+renderTas();
+</script>
+</body>
+  </html>
